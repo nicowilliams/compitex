@@ -7,10 +7,13 @@
 
 ## Usage
 
-```compitex filename```
+```compitex [filename]```
 
 ```filename```  : A plain text file containing the LaTeX equations
-            to be converted. Each equation on a separate line.
+            to be converted. Each equation on a separate line and should
+            end in a semi-colon (`;`).
+
+If a `filename` is not given then equations are read from `stdin`.
 
 ## Compiling
 
