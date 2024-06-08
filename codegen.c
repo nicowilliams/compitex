@@ -19,6 +19,7 @@
  * KIND, either express or implied.
  *
  ***************************************************************************/
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -78,7 +79,7 @@ char* _ex2 (char * dst, nodeType *p) {
                         
         case '^':
             strfcat(dst,"(pow(");
-            nops = p->opr.nops;
+            assert(p->opr.nops == 2);
             
             /* check leftmost node */
             _ex2(dst, p->opr.op[0]);
@@ -86,10 +87,49 @@ char* _ex2 (char * dst, nodeType *p) {
             strfcat(dst,",");
             
             /* check rightmost node */
-            if(nops > 1)
-                _ex2(dst, p->opr.op[nops-1]);
+            _ex2(dst, p->opr.op[1]);
             
             strfcat(dst,"))");
+            break;
+
+        case 's':
+            strfcat(dst,"(sqrt(");
+            assert(p->opr.nops == 1);
+            _ex2(dst, p->opr.op[0]);
+            strfcat(dst,"))");
+            break;
+
+        case 'c':
+            // Call a one-argument function
+            assert(p->opr.nops == 2);
+            assert(p->opr.op[0]->type == typeId);
+            _ex2(dst, p->opr.op[0]);
+            strfcat(dst,"(");
+            _ex2(dst, p->opr.op[1]);
+            strfcat(dst,")");
+            break;
+
+        case 'C':
+            assert(p->opr.nops == 3);
+            assert(p->opr.op[0]->type == typeId);
+            if (strcmp(p->opr.op[0]->id.s, "logB") == 0) {
+                // Logarithm base something
+                strfcat(dst,"(log(");
+                _ex2(dst, p->opr.op[2]);
+                strfcat(dst,")/");
+                strfcat(dst,"log(");
+                _ex2(dst, p->opr.op[1]);
+                strfcat(dst,"))");
+            } else {
+                // Call a one-argument function raised to some power
+                strfcat(dst,"(pow(");
+                _ex2(dst, p->opr.op[0]);
+                strfcat(dst,"(");
+                _ex2(dst, p->opr.op[2]);
+                strfcat(dst,"),");
+                _ex2(dst, p->opr.op[1]);
+                strfcat(dst,"))");
+            }
             break;
             
         default: //binary operators

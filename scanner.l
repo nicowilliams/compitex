@@ -34,8 +34,25 @@ real    {digit}+(\.{digit}+)?
 res		"while"|"if"|"else"|"print"
 bar		"\\bar"
 var     ({letter}|"_")({letter}|{digit}|","|"_"|"\*")*
-mul     "\\times"
+mul     ("\\times"|"\\cdot")
+ln      "\\ln"
+log	"\\log"
+logb	"\\log_"
+sin     "\\sin"
+cos     "\\cos"
+tan     "\\tan"
+sec     "\\sec"
+csc     "\\csc"
+cot     "\\cot"
+arcsin  "\\arcsin"
+arccos  "\\arccos"
+arctan  "\\arctan"
+sinh    "\\sinh"
+cosh    "\\cosh"
+tanh    "\\tanh"
 frac    "\\frac"
+left    "\\left"
+right    "\\right"
 sum		"\\sum_"
 sqrt	"\\sqrt"
 %% 
@@ -55,7 +72,24 @@ sqrt	"\\sqrt"
 {frac}			return FRAC;
 {sum}			return SUM;
 {sqrt}			return SQRT;
+{sin}			return SIN;
+{cos}			return COS;
+{tan}			return TAN;
+{sec}			return SEC;
+{csc}			return CSC;
+{cot}			return COT;
+{arcsin}		return ARCSIN;
+{arccos}		return ARCCOS;
+{arctan}		return ARCTAN;
+{sinh}			return SINH;
+{cosh}			return COSH;
+{tanh}			return TANH;
+{ln}			return LN;
+{log}			return LOG;
+{logb}			return LOGB;
 {bar}			return BAR;
+{left}			return LEFT;
+{right}			return RIGHT;
 "\\{"			return '{';
 "\\}"			return '}';
  

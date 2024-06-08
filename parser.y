@@ -31,13 +31,18 @@ int sym[26];                             /* symbol table */
 
 %union { 
 	double dValue;                      /* double value */ 
-    char* str;                          /* string value */ 
+	char* str;                          /* string value */ 
 	nodeType *nPtr;                     /* node pointer */ 
 }; 
 %token <dValue> REAL
 
-%token <str> VARIABLE 
-%token WHILE IF PRINT FRAC MUL SUM SQRT BAR
+%token <str> VARIABLE
+%token <str> SIN COS TAN
+%token <str> SEC CSC COT
+%token <str> ARCSIN ARCCOS ARCTAN
+%token <str> SINH COSH TANH
+%token <str> LN LOG LOGB
+%token WHILE IF PRINT FRAC MUL SUM SQRT BAR LEFT RIGHT
 %nonassoc IFX 
 %nonassoc ELSE 
 
@@ -45,9 +50,26 @@ int sym[26];                             /* symbol table */
 %left '+' '-' 
 %left MUL '/' 
 %right '^'
+%nonassoc LN LOG LOGB
+%nonassoc SIN COS TAN SEC CSC COT ARCSIN ARCCOS ARCTAN SINH COSH TANH
 %nonassoc UMINUS 
 
-%type <nPtr> stmt expr stmt_list ident
+%type <nPtr> stmt expr stmt_list ident funcs
+
+/*
+ * The LOGB rule causes 11 shift-reduce conflicts (which are resolved by
+ * taking the shift).  Thus \log_{3}a+b means the logarithm base three of
+ * (a+b), not b plus the logarithm base 3 of a.
+ *
+ * The trig functions also have this problem, and cause another 11
+ * shift-reduce conflicts, and another 11 more for the exponentiated
+ * trigonometric functions.  Thus \sin a+b is the sine of (a+b), not b
+ * plus the sine of a.  And so on.
+ *
+ * The sum form also has this problem, which adds yet another 11
+ * shift-reduce conflicts.
+ */
+%expect 44
 
 %% 
 
@@ -82,6 +104,20 @@ ident:
   | VARIABLE                    { $$ = id($1); } 
   ;
 
+funcs:
+    SIN     { $$ = id("sin"); }
+  | COS     { $$ = id("cos"); }
+  | TAN     { $$ = id("tan"); }
+  | SEC     { $$ = id("sec"); }
+  | CSC     { $$ = id("csc"); }
+  | COT     { $$ = id("cot"); }
+  | ARCSIN  { $$ = id("asin"); }
+  | ARCCOS  { $$ = id("acos"); }
+  | ARCTAN  { $$ = id("atan"); }
+  | SINH    { $$ = id("sinh"); }
+  | COSH    { $$ = id("cosh"); }
+  | TANH    { $$ = id("tanh"); }
+
 expr:
     ident
   | BAR '{' VARIABLE '}'		{
@@ -95,11 +131,23 @@ expr:
   | expr MUL expr               { $$ = opr('*', 2, $1, $3); }
   | expr '/' expr               { $$ = opr('/', 2, $1, $3); }
   | FRAC '{'expr'}' '{'expr'}'  { $$ = opr('/', 2, $3, $6); }
+  | SUM '{'VARIABLE '=' expr '}' '^' '{'expr'}' expr
+								{ $$ = opr(SUM, 4, id($3), $5, $9, $11);}
   | SUM '{'VARIABLE '=' expr '}' '^' '{'expr'}''{'expr'}'     
 								{ $$ = opr(SUM, 4, id($3), $5, $9, $12);}
-  | SQRT '{' expr '}'			{ $$ = opr('^', 2, $3,con(0.5)); }
+  | SQRT '{' expr '}'			{ $$ = opr('s', 1, $3); }
   | SQRT '[' REAL ']''{' expr '}'			
 								{ $$ = opr('^', 2, $6, con(1/$3)); }
+
+  | LN expr                     { $$ = opr('c', 2, id("log"), $2); }
+  | LOG expr                    { $$ = opr('c', 2, id("log"), $2); }
+  | LOGB '{' expr '}' expr      { $$ = opr('C', 3, id("logB"), $3, $5); }
+
+  | funcs expr                      { $$ = opr('c', 2, $1, $2); }
+  | funcs '^' '{' expr '}' expr     { $$ = opr('C', 3, $1, $4, $6); }
+
+  | LEFT '{' expr RIGHT '}'			{ $$ = $3; }
+
   | expr '^' '{' expr '}'       { $$ = opr('^', 2, $1, $4); }
   | expr '<' expr               { $$ = opr('<', 2, $1, $3); } 
   | expr '>' expr               { $$ = opr('>', 2, $1, $3); } 
@@ -109,7 +157,7 @@ expr:
   | expr EQ expr                { $$ = opr(EQ, 2, $1, $3); } 
   | '(' expr ')'                { $$ = $2; } 
   | ident ident					{ $$ = opr('*', 2, $1, $2); }
-  | ident '(' expr ')'			{ $$ = opr('*', 2, $1, $3); }
+  | ident '(' expr ')'		{ $$ = opr('*', 2, $1, $3); }
   | '(' expr ')' ident			{ $$ = opr('*', 2, $2, $4); }
   | '(' expr ')' '(' expr ')'	{ $$ = opr('*', 2, $2, $5); }
   | error						{ printf("%d: Error at (%c)\n", lineno, yychar);}	

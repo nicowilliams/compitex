@@ -15,10 +15,30 @@
 
 If a `filename` is not given then equations are read from `stdin`.
 
+Supported functions:
+
+ - trigonometric functions (`sin`, `cos`, `tan`, `sec`, `csc`, `cot`,
+   `arcsin`, `arccos`, `arctan`, `sinh`, `cosh`, `tanh`)
+
+ - logarithm functions (`ln`, `log`, `log_{base}`)
+
 ## Compiling
 
 You need to have bison and flex installed to be able to
 compile the code. After that just run make. 
+
+## Examples
+
+```bash
+: ; echo '\sum_{i=0}^{10}\sin^{2}\log_{3}b;' | ./compitex
+i, sin, logB, b
+double sum0=0;
+for(i = 0; i <= 10 ; i++) {
+        sum0 += (pow(sin((log(b)/log(3))),2));
+}
+
+sum0;
+```
 
 ## Acknowledgements 
 
